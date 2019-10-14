@@ -35,13 +35,15 @@ search = lambda do
   server = Iqdb::Server.default
 
   begin
+    limit = params["limit"]&.to_i || 3
+
     if params["file"]
       file = params["file"]
-      results = server.query(3, file["tempfile"].path)
+      results = server.query(limit, file["tempfile"].path)
     elsif params["url"]
       url = params["url"]
       ref = params["ref"] || find_referer(url)
-      results = server.download_and_query(url, ref, 3)
+      results = server.download_and_query(url, ref, limit)
     end
 
     if params["callback"]
