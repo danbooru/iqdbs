@@ -8,7 +8,6 @@ Dotenv.load
 require "logger"
 require "aws-sdk"
 require "optparse"
-require "cityhash"
 require "iqdb/responses/collection"
 require "iqdb/responses/error"
 require "iqdb/responses/responses"
@@ -81,31 +80,26 @@ end
 def add_to_iqdb(post_id, image_url)
   server = Iqdb::Server.new(ENV["IQDB_HOSTNAME"], ENV["IQDB_PORT"])
   command = Iqdb::Command.new(ENV["IQDB_DATABASE_FILE"])
-  url_hash = CityHash.hash64(image_url).to_s(36)
   url = URI.parse(image_url)
 
-  Tempfile.open("iqdbs-#{url_hash}") do |f|
+  Tempfile.open("iqdbs-#{post_id}") do |f|
     begin
       Net::HTTP.start(url.host, url.port, :use_ssl => url.is_a?(URI::HTTPS)) do |http|
         http.request_get(url.to_s) do |res|
           if res.is_a?(Net::HTTPSuccess)
             res.read_body(f)
-            size = f.size
             f.close
           else
             LOGGER.error(res.to_s)
           end
         end
       end
-    rescue Net::HTTPServiceUnavailable, Net::HTTPBadGateway, Net::HTTPGatewayTimeOut
-      sleep(60)
-      retry
     end
 
     lock do
       server.add(post_id, f.path)
       command.add(post_id, f.path)
-      LOGGER.debug("added #{image_url} for #{post_id} (size:#{size})")
+      LOGGER.debug("added #{image_url} for #{post_id}")
     end
   end
 end
