@@ -22,6 +22,7 @@ end
 $running = true
 $options = {
   pidfile: "/var/run/iqdbs/sqs_processor.pid",
+  lockfile: "/var/run/iqdbs/sqs_processor.lock",
   logfile: "/var/log/iqdbs/sqs_processor.log"
 }
 
@@ -32,6 +33,10 @@ OptionParser.new do |opts|
 
   opts.on("--logfile=LOGFILE") do |logfile|
     $options[:logfile] = logfile
+  end
+
+  opts.on("--lockfile=LOCKFILE") do |lockfile|
+    $options[:lockfile] = lockfile
   end
 end.parse!
 
@@ -56,12 +61,21 @@ Signal.trap("TERM") do
   $running = false
 end
 
+def lock(filename = $options[:lockfile], &block)
+  File.open(filename, File::RDWR|File::CREAT, 0644) do |lockfile|
+    Timeout.timeout(60) { lockfile.flock(File::LOCK_EX) }
+    yield lockfile
+  end
+end
+
 def remove_from_iqdb(post_id)
   server = Iqdb::Server.new(ENV["IQDB_HOSTNAME"], ENV["IQDB_PORT"])
   command = Iqdb::Command.new(ENV["IQDB_DATABASE_FILE"])
 
-  server.remove(post_id)
-  command.remove(post_id)
+  lock do
+    server.remove(post_id)
+    command.remove(post_id)
+  end
 end
 
 def add_to_iqdb(post_id, image_url)
@@ -78,7 +92,6 @@ def add_to_iqdb(post_id, image_url)
             res.read_body(f)
             size = f.size
             f.close
-            LOGGER.debug("added #{image_url} for #{post_id} (size:#{size})")
           else
             LOGGER.error(res.to_s)
           end
@@ -88,14 +101,18 @@ def add_to_iqdb(post_id, image_url)
       sleep(60)
       retry
     end
-    server.add(post_id, f.path)
-    command.add(post_id, f.path)
+
+    lock do
+      server.add(post_id, f.path)
+      command.add(post_id, f.path)
+      LOGGER.debug("added #{image_url} for #{post_id} (size:#{size})")
+    end
   end
 end
 
 def process_queue(poller, logger)
   logger.info "Starting"
-  
+
   poller.before_request do
     unless $running
       throw :stop_polling
@@ -120,7 +137,7 @@ def process_queue(poller, logger)
           logger.info("unknown command: #{command}")
         end
       end
-      
+
     rescue Interrupt
       exit(0)
 
