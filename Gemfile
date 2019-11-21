@@ -5,7 +5,6 @@ gem "capistrano"
 gem "httparty"
 gem "aws-sdk", "~> 2"
 gem "dotenv"
-gem "cityhash"
 
 group :development do
   gem 'foreman'
