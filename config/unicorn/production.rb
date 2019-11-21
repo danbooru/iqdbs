@@ -1,25 +1,23 @@
 # Set your full path to application.
-app_path = "/var/www/iqdbs/current"
+app_path = ENV.fetch("UNICORN_ROOT", "/var/www/iqdbs/current")
 
 # Set unicorn options
-worker_processes 3
+worker_processes ENV.fetch("UNICORN_PROCESSES", 4)
 
 timeout 180
-listen "127.0.0.1:9000", :tcp_nopush => true
+listen ENV.fetch("UNICORN_LISTEN", "127.0.0.1:9000"), tcp_nopush: true
 listen "/tmp/.unicorn.sock", :backlog => 64
 
 # Spawn unicorn master worker for user apps (group: apps)
-user 'danbooru', 'danbooru'
+unicorn_user = ENV.fetch("UNICORN_USER", "danbooru")
+user unicorn_user, unicorn_user
 
 # Fill path to your app
 working_directory app_path
 
-# Should be 'production' by default, otherwise use other env 
-rails_env = ENV['RAILS_ENV'] || 'production'
-
 # Log everything to one file
-stderr_path "/var/log/iqdbs/unicorn-err.log"
-stdout_path "/var/log/iqdbs/unicorn.log"
+stderr_path "#{app_path}/log/unicorn-err.log"
+stdout_path "#{app_path}/log/unicorn.log"
 
 # Set master PID location
 pid "#{app_path}/tmp/pids/unicorn.pid"

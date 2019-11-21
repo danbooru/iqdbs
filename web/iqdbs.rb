@@ -11,14 +11,6 @@ require "iqdb/responses/responses"
 require "iqdb/server"
 require "iqdb/command"
 
-set :port, ENV["SINATRA_PORT"]
-
-# before "/similar" do
-#   if params["key"] != ENV["AUTH_KEY"]
-#     halt 401
-#   end
-# end
-
 def find_referer(url)
   if url =~  /\Ahttps?:\/\/(?:\w+\.)?pixiv\.net/ || url =~ /\Ahttps?:\/\/i\.pximg\.net/
     return "https://www.pixiv.net"
