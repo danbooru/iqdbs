@@ -1,3 +1,6 @@
+require "dotenv"
+Dotenv.load(".env")
+
 # Set your full path to application.
 app_path = ENV.fetch("UNICORN_ROOT", "/var/www/iqdbs/current")
 
