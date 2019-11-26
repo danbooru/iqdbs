@@ -6,7 +6,7 @@ worker_processes ENV.fetch("UNICORN_PROCESSES", 4)
 
 timeout 180
 listen ENV.fetch("UNICORN_LISTEN", "127.0.0.1:9000"), tcp_nopush: true
-listen "/tmp/.unicorn.sock", :backlog => 64
+listen "#{app_path}/tmp/unicorn.sock", :backlog => 64
 
 # Spawn unicorn master worker for user apps (group: apps)
 unicorn_user = ENV.fetch("UNICORN_USER", "danbooru")
