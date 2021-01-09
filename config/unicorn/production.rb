@@ -5,7 +5,7 @@ Dotenv.load(".env")
 app_path = ENV.fetch("UNICORN_ROOT", "/var/www/iqdbs/current")
 
 # Set unicorn options
-worker_processes ENV.fetch("UNICORN_PROCESSES", 4)
+worker_processes ENV.fetch("UNICORN_PROCESSES", 4).to_i
 
 timeout 180
 listen ENV.fetch("UNICORN_LISTEN", "127.0.0.1:9000"), tcp_nopush: true
