@@ -5,63 +5,35 @@ Dotenv.load
 
 require "sinatra"
 require "json"
-require "iqdb/responses/collection"
-require "iqdb/responses/error"
-require "iqdb/responses/responses"
-require "iqdb/server"
-require "iqdb/command"
+require "iqdb"
 
-def find_referer(url)
-  if url =~  /\Ahttps?:\/\/(?:\w+\.)?pixiv\.net/ || url =~ /\Ahttps?:\/\/i\.pximg\.net/
-    return "https://www.pixiv.net"
-  end
+iqdb = Iqdb.new(
+  iqdb_hostname: ENV.fetch("IQDB_HOSTNAME", "localhost"),
+  iqdb_port: ENV.fetch("IQDB_PORT", 8001),
+  iqdb_database_file: ENV.fetch("IQDB_DATABASE_FILE", "iqdb.db"),
+)
 
-  if url =~ %r{https?://lohas\.nicoseiga\.jp} || url =~ %r{https?://seiga\.nicovideo\.jp}
-    return "https://seiga.nicovideo.jp"
-  end
+post "/similar" do
+  content_type :json
 
-  return nil
+  limit = params.fetch(:limit, 3).to_i
+  file = params[:file][:tempfile]
+  results = iqdb.search(file, limit)
+
+  results.to_json
+rescue Iqdb::Responses::Error => e
+  { error: e.to_s }.to_json
 end
 
-search = lambda do
-  server = Iqdb::Server.default
-
-  begin
-    limit = params["limit"]&.to_i || 3
-
-    if params["file"]
-      file = params["file"]
-      results = server.query(limit, file["tempfile"].path)
-    elsif params["url"]
-      url = params["url"]
-      ref = params["ref"] || find_referer(url)
-      results = server.download_and_query(url, ref, limit)
-    end
-
-    if params["callback"]
-      data = results.to_json
-      url = URI.parse(params["callback"])
-      url.query = URI.encode_www_form({matches: data})
-      redirect url.to_s
-    else
-      content_type :json
-      results.to_json
-    end
-
-  rescue Iqdb::Responses::Error => e
-    content_type :json
-    JSON.generate({"error" => e.to_s})
-  end
-end 
-
-get "/favicon.ico" do
-  204
+post "/posts/:id" do
+  post_id = params[:id].to_i
+  file = params[:file][:tempfile]
+  iqdb.add(post_id, file)
+  200
 end
 
-post "/similar", &search
-
-get "/similar", &search
-
-get "/" do
-	redirect "/index.html"
+delete "/posts/:id" do
+  post_id = params[:id].to_i
+  iqdb.remove(post_id)
+  200
 end

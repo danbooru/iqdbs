@@ -1,5 +1,7 @@
-module Iqdb
+class Iqdb
   module Responses
+    class Error < StandardError; end
+
     class Base
     end
 

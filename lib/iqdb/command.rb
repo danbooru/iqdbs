@@ -1,4 +1,4 @@
-module Iqdb
+class Iqdb
   class Command
     attr_reader :database
 

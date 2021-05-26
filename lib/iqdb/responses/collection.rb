@@ -1,11 +1,13 @@
-module Iqdb
+require "iqdb/responses/responses"
+
+class Iqdb
   module Responses
     class Collection
       attr_reader :responses
       include Enumerable
       extend Forwardable
       delegate [:<=>, :each, :to] => :matches
-      
+
       def initialize(response_string)
         @responses = response_string.split(/\n/).map do |string|
           ::Iqdb::Responses.const_get("Response_#{string[0..2]}").new(string[4..-1])
