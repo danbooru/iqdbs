@@ -11,8 +11,8 @@ class Iqdb
     @lockfile = "#{iqdb_database_file}.lock"
   end
 
-  def search(file, limit)
-    server.query(limit, file.path)
+  def query(file, limit)
+    server.query(file, limit)
   end
 
   def add(post_id, file)

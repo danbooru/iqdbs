@@ -31,9 +31,11 @@ class Iqdb
       end
     end
 
-    def query(n, filename, flags = 0)
+    def query(file, limit, flags: 0)
       request do |socket|
-        socket.puts "query 0 #{flags} #{n} #{filename}"
+        size = File.size(file)
+        socket.puts "query 0 #{flags} #{limit} :#{size}"
+        IO.copy_stream(file, socket)
         socket.puts "done"
         responses = Responses::Collection.new(socket.read)
       end

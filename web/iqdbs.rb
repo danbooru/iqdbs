@@ -18,7 +18,7 @@ post "/similar" do
 
   limit = params.fetch(:limit, 3).to_i
   file = params[:file][:tempfile]
-  results = iqdb.search(file, limit)
+  results = iqdb.query(file, limit)
 
   results.to_json
 rescue Iqdb::Responses::Error => e
