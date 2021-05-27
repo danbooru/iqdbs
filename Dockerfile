@@ -1,13 +1,12 @@
-FROM ruby:2.6.5 AS build
+FROM ruby:3.0.1 AS build
 WORKDIR /tmp
-COPY Gemfile Gemfile.lock .
-RUN bundle install --with=production
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
 
-FROM ruby:2.6.5-slim
+FROM ruby:3.0.1-slim
 WORKDIR /root
 COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY . .
+COPY . ./
 
-ENV LANG C.UTF-8
-ENTRYPOINT ["bundle"]
-CMD ["exec", "ruby", "web/iqdbs.rb"]
+EXPOSE 3000
+CMD ["bin", "puma"]
