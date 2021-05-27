@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  iqdb:
+    image: evazion/iqdb
+    command: ["listen", "0.0.0.0:5588", "/iqdb/iqdb.db"]
+    volumes:
+      - "iqdb-data:/iqdb"
+
+  iqdbs:
+    image: evazion/iqdbs
+    environment:
+      - IQDB_HOSTNAME=iqdb
+      - IQDB_PORT=5588
+      - IQDB_DATABASE_FILE=/iqdb/iqdb.db
+    ports:
+      - "3000:3000"
+    command: ["bin/puma"]
+    volumes:
+      - "iqdb-data:/iqdb"
+
+volumes:
+  iqdb-data:
+    name: iqdb-data
