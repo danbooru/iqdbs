@@ -1,4 +1,5 @@
 require "fileutils"
+require "timeout"
 require "iqdb/server"
 require "iqdb/command"
 
@@ -35,7 +36,7 @@ class Iqdb
 
   def lock(&block)
     File.open(lockfile, File::RDWR|File::CREAT, 0644) do |file|
-      Timeout.timeout(60) { file.flock(File::LOCK_EX) }
+      Timeout::timeout(60) { file.flock(File::LOCK_EX) }
       yield
     end
   end
