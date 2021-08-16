@@ -1,3 +1,11 @@
+### IQDBS
+
+This project has been archived. It is no longer used by Danbooru. It has been
+replaced by a rewritten version of IQDB that speaks HTTP directly. See
+https://github.com/danbooru/iqdb.
+
+### Old README
+
 iqdbs is a service for running IQDB. It listens on Amazon SQS for update 
 requests to download and process images, and also has a simple web frontend
 for query requests.
